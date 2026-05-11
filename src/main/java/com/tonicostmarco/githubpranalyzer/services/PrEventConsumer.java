@@ -27,6 +27,14 @@ public class PrEventConsumer {
 
         PrEvent event = new PrEvent();
 
+        toDTO(event, message);
+
+        repository.save(event);
+    }
+
+
+    public void toDTO(PrEvent event, PrEventMessage message) {
+
         event.setDeliveryId(message.deliveryId());
         event.setAction(message.payload().action());
         event.setPrNumber(message.payload().number());
@@ -36,8 +44,6 @@ public class PrEventConsumer {
         event.setPrAuthor(message.payload().pullRequest().user().login());
         event.setRepository(message.payload().repository().fullName());
         event.setReceivedAt(LocalDateTime.now());
-
-        repository.save(event);
     }
 }
 
