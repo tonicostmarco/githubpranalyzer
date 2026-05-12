@@ -1,6 +1,6 @@
 package com.tonicostmarco.githubpranalyzer.services;
 
-import com.tonicostmarco.githubpranalyzer.dtos.PrEventMessage;
+import com.tonicostmarco.githubpranalyzer.dtos.messaging.PrEventMessage;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 

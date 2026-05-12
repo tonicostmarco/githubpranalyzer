@@ -1,7 +1,6 @@
 package com.tonicostmarco.githubpranalyzer.services;
 
-import com.tonicostmarco.githubpranalyzer.dtos.PrEventMessage;
-import com.tonicostmarco.githubpranalyzer.dtos.PrWebhookPayload;
+import com.tonicostmarco.githubpranalyzer.dtos.messaging.PrEventMessage;
 import com.tonicostmarco.githubpranalyzer.entities.PrEvent;
 import com.tonicostmarco.githubpranalyzer.repositories.PrEventRepository;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -27,13 +26,13 @@ public class PrEventConsumer {
 
         PrEvent event = new PrEvent();
 
-        toDTO(event, message);
+        toEntity(event, message);
 
         repository.save(event);
     }
 
 
-    public void toDTO(PrEvent event, PrEventMessage message) {
+    public void toEntity(PrEvent event, PrEventMessage message) {
 
         event.setDeliveryId(message.deliveryId());
         event.setAction(message.payload().action());
@@ -44,6 +43,8 @@ public class PrEventConsumer {
         event.setPrAuthor(message.payload().pullRequest().user().login());
         event.setRepository(message.payload().repository().fullName());
         event.setReceivedAt(LocalDateTime.now());
+        event.setOpenedAt(message.payload().pullRequest().openedAt());
+        event.setMergedAt(message.payload().pullRequest().mergedAt());
     }
 }
 

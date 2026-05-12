@@ -1,7 +1,7 @@
 package com.tonicostmarco.githubpranalyzer.controller;
 
-import com.tonicostmarco.githubpranalyzer.dtos.PrEventMessage;
-import com.tonicostmarco.githubpranalyzer.dtos.PrWebhookPayload;
+import com.tonicostmarco.githubpranalyzer.dtos.messaging.PrEventMessage;
+import com.tonicostmarco.githubpranalyzer.dtos.messaging.PrWebhookPayload;
 import com.tonicostmarco.githubpranalyzer.services.PrEventProducer;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
