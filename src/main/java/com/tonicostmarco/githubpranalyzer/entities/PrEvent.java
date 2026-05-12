@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Document(collection = "pr_events")
 public class PrEvent {
@@ -20,13 +21,14 @@ public class PrEvent {
         private String prAuthor;
         private String repository;
         private LocalDateTime receivedAt;
+        private OffsetDateTime openedAt;
+        private OffsetDateTime mergedAt;
 
     public PrEvent() {
 
     }
 
-    public PrEvent(String id, String deliveryId, String action, Integer prNumber, String prTitle, String prState, Boolean merged, String prAuthor, String repository, LocalDateTime receivedAt) {
-        this.id = id;
+    public PrEvent(String deliveryId, String action, Integer prNumber, String prTitle, String prState, Boolean merged, String prAuthor, String repository, LocalDateTime receivedAt, OffsetDateTime openedAt, OffsetDateTime mergedAt) {
         this.deliveryId = deliveryId;
         this.action = action;
         this.prNumber = prNumber;
@@ -36,6 +38,8 @@ public class PrEvent {
         this.prAuthor = prAuthor;
         this.repository = repository;
         this.receivedAt = receivedAt;
+        this.openedAt = openedAt;
+        this.mergedAt = mergedAt;
     }
 
     public String getId() {
@@ -116,6 +120,23 @@ public class PrEvent {
 
     public void setReceivedAt(LocalDateTime receivedAt) {
         this.receivedAt = receivedAt;
+    }
+
+
+    public OffsetDateTime getOpenedAt() {
+        return openedAt;
+    }
+
+    public void setOpenedAt(OffsetDateTime openedAt) {
+        this.openedAt = openedAt;
+    }
+
+    public OffsetDateTime getMergedAt() {
+        return mergedAt;
+    }
+
+    public void setMergedAt(OffsetDateTime mergedAt) {
+        this.mergedAt = mergedAt;
     }
 }
 
