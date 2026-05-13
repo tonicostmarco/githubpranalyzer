@@ -1,13 +1,12 @@
 package com.tonicostmarco.githubpranalyzer.services;
 
 import com.tonicostmarco.githubpranalyzer.dtos.analytics.AuthorMetricsDTO;
+import com.tonicostmarco.githubpranalyzer.dtos.analytics.RepositoryMetricsDTO;
 import com.tonicostmarco.githubpranalyzer.dtos.analytics.SummaryDTO;
-import com.tonicostmarco.githubpranalyzer.entities.PrEvent;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -72,6 +71,35 @@ public class AnalyticsService {
         //executar a aggregation definindo para qual dto vai ser mapeado
 
         return template.aggregate(aggregation, "pr_events", AuthorMetricsDTO.class).getMappedResults();
+
+    }
+
+    public List<RepositoryMetricsDTO> findRepositoryMetrics(LocalDateTime from, LocalDateTime to) {
+
+        //montar stages
+
+        MatchOperation match = Aggregation.match(Criteria.where("receivedAt").gte(from).lte(to));
+
+        GroupOperation group = Aggregation.group("repository")
+                .count().as("total")
+                .sum(ConditionalOperators.when(Criteria.where("merged").is(true)).then(1)
+                        .otherwise(0)).as("merged")
+                .sum(ConditionalOperators.when(Criteria.where("prState").is("open")).then(1)
+                        .otherwise(0)).as("opened")
+                .sum(ConditionalOperators.when(Criteria.where("prState").is("closed")).then(1)
+                                .otherwise(0)).as("closed");
+
+        ProjectionOperation projectionOperation = Aggregation.project()
+                .and("_id").as("repository")
+                .andInclude("total", "merged", "opened", "closed");
+
+        //aggregation
+
+        Aggregation aggregation = Aggregation.newAggregation(match, group, projectionOperation);
+
+        //executar aggregation
+
+        return template.aggregate(aggregation, "pr_events", RepositoryMetricsDTO.class).getMappedResults();
 
     }
 
