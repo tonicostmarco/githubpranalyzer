@@ -1,10 +1,14 @@
 package com.tonicostmarco.githubpranalyzer.controller;
 
 import com.tonicostmarco.githubpranalyzer.dtos.analytics.AuthorMetricsDTO;
+import com.tonicostmarco.githubpranalyzer.dtos.analytics.RepositoryMetricsDTO;
 import com.tonicostmarco.githubpranalyzer.dtos.analytics.SummaryDTO;
 import com.tonicostmarco.githubpranalyzer.services.AnalyticsService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,6 +40,14 @@ public class AnalyticsController {
 
         return ResponseEntity.ok(dto);
 
+    }
+
+    @GetMapping(value = "/repositorymetrics")
+    public ResponseEntity<List<RepositoryMetricsDTO>> findRepositoryMetrics(@RequestParam(name = "from") LocalDateTime from, @RequestParam(name = "to") LocalDateTime to) {
+
+        List<RepositoryMetricsDTO> dto = service.findRepositoryMetrics(from, to);
+
+        return ResponseEntity.ok(dto);
     }
 
 }
