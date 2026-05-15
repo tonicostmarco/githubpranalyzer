@@ -1,4 +1,5 @@
 package com.tonicostmarco.githubpranalyzer.dtos;
 
-public record RegisterRequestDTO() {
+public record AuthRequestDTO(String username,
+                             String password) {
 }

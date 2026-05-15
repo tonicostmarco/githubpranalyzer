@@ -1,4 +1,4 @@
 package com.tonicostmarco.githubpranalyzer.dtos;
 
-public class TokenDTO {
+public record TokenDTO (String token) {
 }
