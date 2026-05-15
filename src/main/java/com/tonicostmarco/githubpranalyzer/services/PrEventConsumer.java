@@ -19,7 +19,7 @@ public class PrEventConsumer {
 
     @RabbitListener(queues = "pr-events")
     public void consume(PrEventMessage message) {
-
+ 
         if (repository.existsByDeliveryId(message.deliveryId())) {
             return;
         }
