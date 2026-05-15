@@ -19,8 +19,6 @@ public class PrEventController {
     @PostMapping
     public ResponseEntity<PrEventMessage> webhookReceiver(@RequestHeader("X-GitHub-Delivery") String deliveryId, @RequestBody PrWebhookPayload payload) {
 
-
-
         PrEventMessage eventMessage = new PrEventMessage(deliveryId, payload);
 
         producer.send(eventMessage);
