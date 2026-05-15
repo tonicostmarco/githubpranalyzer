@@ -37,7 +37,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, HmacSignatureFilter hmacFilter) throws Exception {
         http
-                .addFilterBefore(hmacFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(hmacFilter, UsernamePasswordAuthenticationFilter.class).csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/webhook/notify", "/auth/token").permitAll()
                         .requestMatchers("/analytics/**").authenticated()
@@ -55,6 +55,7 @@ public class SecurityConfig {
     public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
         return new NimbusJwtEncoder(jwkSource);
     }
+
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
         RSAKey rsaKey = generateRsa();
