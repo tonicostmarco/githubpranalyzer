@@ -2,37 +2,71 @@ package com.tonicostmarco.githubpranalyzer.service;
 
 import com.tonicostmarco.githubpranalyzer.dtos.messaging.PrEventMessage;
 import com.tonicostmarco.githubpranalyzer.entities.PrEvent;
+import com.tonicostmarco.githubpranalyzer.factory.PrEventMessageFactory;
 import com.tonicostmarco.githubpranalyzer.repositories.PrEventRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.util.Assert;
+
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class PrEventConsumerTest {
+public class PrEventConsumerIT {
 
-    private final PrEventRepository repository;
+    @Autowired
+    private PrEventRepository repository;
 
-    public PrEventConsumerTest(PrEventRepository repository) {
-        this.repository = repository;
+    @Autowired
+    private RabbitTemplate template;
+
+    @Autowired
+    private RabbitAdmin rabbitAdmin;
+
+    @Autowired
+    private RabbitListenerEndpointRegistry listenerRegistry;
+
+    private PrEventMessage message;
+
+    @BeforeEach
+    void setUp() {
+        rabbitAdmin.declareExchange(new TopicExchange("pr-exchange"));
+        rabbitAdmin.declareQueue(new Queue("pr-events", true));
+        rabbitAdmin.declareBinding(BindingBuilder.bind(new Queue("pr-events")).to(new TopicExchange("pr-exchange")).with("pr.*"));
+        repository.deleteAll();
+        message = PrEventMessageFactory.createPrEventMessage();
+        listenerRegistry.start();
+    }
+
+    @AfterEach
+    void tearDown() {
+        listenerRegistry.stop();
     }
 
     @Test
-    @RabbitListener(queues = "pr-events")
-    public void consume(PrEventMessage message) {
+    public void consume() throws InterruptedException {
 
-        assertion
-        if (repository.existsByDeliveryId(message.deliveryId())) {
-            return;
-        }
+        template.convertAndSend("pr-exchange", "pr." + message.payload().action(), message);
 
-        PrEvent event = new PrEvent();
+        await().atMost(5, TimeUnit.SECONDS).until(() -> repository.findByDeliveryId(message.deliveryId()).isPresent());
 
-        toEntity(event, message);
+        Optional<PrEvent> result = repository.findByDeliveryId(message.deliveryId());
 
-        repository.save(event);
+        Assertions.assertTrue(result.isPresent());
+        Assertions.assertEquals(message.deliveryId(), result.get().getDeliveryId());
     }
 
 }
