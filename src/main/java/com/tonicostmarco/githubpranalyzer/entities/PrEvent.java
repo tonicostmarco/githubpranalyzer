@@ -3,6 +3,7 @@ package com.tonicostmarco.githubpranalyzer.entities;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
@@ -21,14 +22,15 @@ public class PrEvent {
         private String prAuthor;
         private String repository;
         private LocalDateTime receivedAt;
-        private OffsetDateTime openedAt;
-        private OffsetDateTime mergedAt;
+    private Instant openedAt;
+    private Instant mergedAt;
 
     public PrEvent() {
 
     }
 
-    public PrEvent(String deliveryId, String action, Integer prNumber, String prTitle, String prState, Boolean merged, String prAuthor, String repository, LocalDateTime receivedAt, OffsetDateTime openedAt, OffsetDateTime mergedAt) {
+    public PrEvent(String id, String deliveryId, String action, Integer prNumber, String prTitle, String prState, Boolean merged, String prAuthor, String repository, LocalDateTime receivedAt, Instant openedAt, Instant mergedAt) {
+        this.id = id;
         this.deliveryId = deliveryId;
         this.action = action;
         this.prNumber = prNumber;
@@ -122,20 +124,19 @@ public class PrEvent {
         this.receivedAt = receivedAt;
     }
 
-
-    public OffsetDateTime getOpenedAt() {
+    public Instant getOpenedAt() {
         return openedAt;
     }
 
-    public void setOpenedAt(OffsetDateTime openedAt) {
+    public void setOpenedAt(Instant openedAt) {
         this.openedAt = openedAt;
     }
 
-    public OffsetDateTime getMergedAt() {
+    public Instant getMergedAt() {
         return mergedAt;
     }
 
-    public void setMergedAt(OffsetDateTime mergedAt) {
+    public void setMergedAt(Instant mergedAt) {
         this.mergedAt = mergedAt;
     }
 }
