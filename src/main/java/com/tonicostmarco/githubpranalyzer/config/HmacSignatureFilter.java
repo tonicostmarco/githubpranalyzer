@@ -1,8 +1,11 @@
 package com.tonicostmarco.githubpranalyzer.config;
 
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +15,10 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -32,11 +38,8 @@ public class HmacSignatureFilter extends OncePerRequestFilter {
             return;
         }
 
-        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request, 102400);
-
-        String signature = wrappedRequest.getHeader("X-Hub-Signature-256");
-
-        byte[] body = wrappedRequest.getContentAsByteArray();
+        String signature = request.getHeader("X-Hub-Signature-256");
+        byte[] body = request.getInputStream().readAllBytes();
 
         try {
             if (!isValidSignature(signature, body)) {
@@ -47,7 +50,26 @@ public class HmacSignatureFilter extends OncePerRequestFilter {
             throw new RuntimeException(e);
         }
 
-        filterChain.doFilter(wrappedRequest, response);
+        // body já foi consumido — cria wrapper que repassa os bytes pro controller
+        HttpServletRequestWrapper replayable = new HttpServletRequestWrapper(request) {
+            @Override
+            public ServletInputStream getInputStream() {
+                ByteArrayInputStream bis = new ByteArrayInputStream(body);
+                return new ServletInputStream() {
+                    public int read() { return bis.read(); }
+                    public boolean isFinished() { return bis.available() == 0; }
+                    public boolean isReady() { return true; }
+                    public void setReadListener(ReadListener l) {}
+                };
+            }
+
+            @Override
+            public BufferedReader getReader() {
+                return new BufferedReader(new InputStreamReader(getInputStream()));
+            }
+        };
+
+        filterChain.doFilter(replayable, response);
     }
 
     private boolean isValidSignature(String signature, byte[] body) throws InvalidKeyException, NoSuchAlgorithmException {
