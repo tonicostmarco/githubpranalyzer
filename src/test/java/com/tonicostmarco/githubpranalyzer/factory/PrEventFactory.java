@@ -2,6 +2,7 @@ package com.tonicostmarco.githubpranalyzer.factory;
 
 import com.tonicostmarco.githubpranalyzer.entities.PrEvent;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
@@ -19,10 +20,10 @@ public class PrEventFactory {
         String prAuthor = "tonicostmarco";
         String repository = "tonicostmarco/github-pr-analyzer";
         LocalDateTime receivedAt = LocalDateTime.now();
-        OffsetDateTime openedAt = OffsetDateTime.now();
-        OffsetDateTime mergedAt = OffsetDateTime.now().plusSeconds(5667);
+        Instant openedAt = Instant.now();
+        Instant mergedAt = Instant.now().plusSeconds(5667);
 
-        PrEvent pr = new PrEvent(deliveryId, action, prNumber, prTitle, prState, merged, prAuthor, repository, receivedAt, openedAt, mergedAt) ;
+        PrEvent pr = new PrEvent(id, deliveryId, action, prNumber, prTitle, prState, merged, prAuthor, repository, receivedAt, openedAt, mergedAt) ;
 
         return pr;
     }
