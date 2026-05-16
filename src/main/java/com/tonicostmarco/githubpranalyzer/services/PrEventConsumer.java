@@ -19,7 +19,7 @@ public class PrEventConsumer {
 
     @RabbitListener(queues = "pr-events")
     public void consume(PrEventMessage message) {
- 
+        System.out.println("chegou");
         if (repository.existsByDeliveryId(message.deliveryId())) {
             return;
         }
@@ -43,8 +43,8 @@ public class PrEventConsumer {
         event.setPrAuthor(message.payload().pullRequest().user().login());
         event.setRepository(message.payload().repository().fullName());
         event.setReceivedAt(LocalDateTime.now());
-        event.setOpenedAt(message.payload().pullRequest().openedAt());
-        event.setMergedAt(message.payload().pullRequest().mergedAt());
+        event.setOpenedAt(message.payload().pullRequest().openedAt().toInstant());
+        event.setMergedAt(message.payload().pullRequest().mergedAt().toInstant());
     }
 }
 
