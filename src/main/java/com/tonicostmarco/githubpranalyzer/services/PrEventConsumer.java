@@ -19,7 +19,7 @@ public class PrEventConsumer {
 
     @RabbitListener(queues = "pr-events")
     public void consume(PrEventMessage message) {
-        System.out.println("chegou");
+
         if (repository.existsByDeliveryId(message.deliveryId())) {
             return;
         }
@@ -29,6 +29,8 @@ public class PrEventConsumer {
         toEntity(event, message);
 
         repository.save(event);
+
+
     }
 
 
