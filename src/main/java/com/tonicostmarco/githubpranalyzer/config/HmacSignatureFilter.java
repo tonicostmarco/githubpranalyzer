@@ -31,7 +31,8 @@ public class HmacSignatureFilter extends OncePerRequestFilter {
     private String secret;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
+            throws ServletException, IOException {
 
         if (!request.getRequestURI().equals("/webhook/notify")) {
             filterChain.doFilter(request, response);
@@ -50,16 +51,25 @@ public class HmacSignatureFilter extends OncePerRequestFilter {
             throw new RuntimeException(e);
         }
 
-        // body já foi consumido — cria wrapper que repassa os bytes pro controller
         HttpServletRequestWrapper replayable = new HttpServletRequestWrapper(request) {
             @Override
             public ServletInputStream getInputStream() {
                 ByteArrayInputStream bis = new ByteArrayInputStream(body);
                 return new ServletInputStream() {
-                    public int read() { return bis.read(); }
-                    public boolean isFinished() { return bis.available() == 0; }
-                    public boolean isReady() { return true; }
-                    public void setReadListener(ReadListener l) {}
+                    public int read() {
+                        return bis.read();
+                    }
+
+                    public boolean isFinished() {
+                        return bis.available() == 0;
+                    }
+
+                    public boolean isReady() {
+                        return true;
+                    }
+
+                    public void setReadListener(ReadListener l) {
+                    }
                 };
             }
 
