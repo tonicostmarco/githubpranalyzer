@@ -84,7 +84,7 @@ public class PrEventControllerIT {
         byte[] bodyBytes = objectMapper.writeValueAsBytes(payload);
 
         mockMvc.perform(post("/webhook/notify")
-                        .header("X-Hub-Signature-256", signature(bodyBytes)) // HMAC do body real
+                        .header("X-Hub-Signature-256", signature(bodyBytes))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bodyBytes))
                 .andExpect(status().isBadRequest());
