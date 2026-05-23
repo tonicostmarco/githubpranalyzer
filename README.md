@@ -63,6 +63,10 @@ PrEventProducer ──► pr-exchange (TopicExchange)
                          │
                          ▼
               GET /analytics/** (JWT required)
+                         │
+                         ▼
+              github-pr-insights (Python)
+              LLM-powered natural language analysis
 ```
 
 ### Package Structure
@@ -379,7 +383,40 @@ Tests use embedded MongoDB (Flapdoodle) and real RabbitMQ via Docker. Async asse
 - [ ] Pagination for analytics endpoints
 - [ ] GitHub App integration (replace manual webhook secret with installation tokens)
 - [ ] Deploy to AWS EC2
-- [ ] Python + LLM — automated PR analysis and data visualization layer consuming the analytics API
+- [x] Python + LLM — automated PR analysis and natural language insights via [github-pr-insights](https://github.com/tonicostmarco/github-pr-insights)
+
+---
+
+## 🐍 AI Analytics Layer
+
+[github-pr-insights](https://github.com/tonicostmarco/github-pr-insights) is a companion Python service that consumes this API and uses an LLM (Groq, LLaMA 3.3 70B) to generate natural language insights about pull request data.
+
+**Tech stack:** Python 3.13 · FastAPI · Groq · requests · python-dotenv
+
+**How it works:**
+
+1. The client authenticates via `/auth/token` and receives a JWT.
+2. The client calls `/insights/` on the Python service with the JWT in the `Authorization` header.
+3. The Python service validates the token by forwarding it to this API. If it returns 401, the analysis is denied.
+4. With a valid token, the service fetches `/analytics/summary`, `/analytics/authormetrics`, and `/analytics/repositorymetrics`.
+5. The data is sent to Groq, which generates a natural language summary.
+6. The insight is returned to the client.
+
+**Quick start:**
+
+```bash
+git clone https://github.com/tonicostmarco/github-pr-insights
+cd github-pr-insights
+
+python -m venv venv
+source venv/bin/activate
+pip install fastapi uvicorn requests groq python-dotenv
+
+# configure .env, then:
+uvicorn main:app --reload
+```
+
+See the full setup and usage instructions in the [github-pr-insights README](https://github.com/tonicostmarco/github-pr-insights).
 
 ---
 
