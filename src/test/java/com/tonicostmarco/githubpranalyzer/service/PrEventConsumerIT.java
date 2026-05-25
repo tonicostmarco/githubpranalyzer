@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -44,8 +45,11 @@ public class PrEventConsumerIT {
     @BeforeEach
     void setUp() {
         rabbitAdmin.declareExchange(new TopicExchange("pr-exchange"));
-        rabbitAdmin.declareQueue(new Queue("pr-events", true));
-        rabbitAdmin.declareBinding(BindingBuilder.bind(new Queue("pr-events")).to(new TopicExchange("pr-exchange")).with("pr.*"));
+        rabbitAdmin.declareQueue(QueueBuilder.durable("pr-events")
+                .withArgument("x-dead-letter-exchange", "pr-dead-exchange")
+                .build());
+        rabbitAdmin.declareBinding(BindingBuilder.bind(new Queue("pr-events"))
+                .to(new TopicExchange("pr-exchange")).with("pr.*"));
         repository.deleteAll();
         message = PrEventMessageFactory.createPrEventMessage();
         listenerRegistry.start();
