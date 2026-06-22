@@ -1,14 +1,4 @@
 services:
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-
   mongodb:
     image: mongo:7
     container_name: mongodb
@@ -18,3 +8,80 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
       MONGO_INITDB_DATABASE: pr_analyzer
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok", "--quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  githubpranalyzer:
+    image: tonicost/githubpranalyzer:latest
+    container_name: githubpranalyzer
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      MONGODB_HOST: mongodb
+      JAVA_TOOL_OPTIONS: "-Xmx300m -Xms150m"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -X POST http://localhost:8080/auth/token -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin123\"}' -o /dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  github-pr-insights:
+    image: tonicost/github-pr-insights:1.0.0
+    container_name: github-pr-insights
+    ports:
+      - "8000:8000"
+    environment:
+      ANALYTICS_BASE_URL: http://githubpranalyzer:8080
+      ANALYTICS_USERNAME: admin
+      ANALYTICS_PASSWORD: admin123
+      GROQ_API_KEY: ${GROQ_API_KEY}
+    depends_on:
+      githubpranalyzer:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/docs -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - githubpranalyzer
+      - github-pr-insights
