@@ -60,4 +60,4 @@ jobs:
                   docker stop githubpranalyzer || true
                   docker rm githubpranalyzer || true
                   docker pull ${{ secrets.DOCKERHUB_USERNAME }}/githubpranalyzer:latest
-                  cd ~/app && GROQ_API_KEY=${{ secrets.GROQ_API_KEY }} docker compose up -d
+                  cd ~/app && docker compose pull && GROQ_API_KEY=${{ secrets.GROQ_API_KEY }} docker compose up -d
