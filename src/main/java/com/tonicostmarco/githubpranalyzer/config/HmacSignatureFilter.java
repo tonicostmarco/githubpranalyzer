@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 
@@ -30,16 +31,25 @@ public class HmacSignatureFilter extends OncePerRequestFilter {
     @Value("${github.webhook.secret}")
     private String secret;
 
+    @Value("${webhook.notify}")
+    private String uri;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        if (!request.getRequestURI().equals("/webhook/notify")) {
+        if (!request.getRequestURI().equals(uri)) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String signature = request.getHeader("X-Hub-Signature-256");
+
+        if (signature == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Empty signature");
+            return;
+        }
+
         byte[] body = request.getInputStream().readAllBytes();
 
         try {
@@ -92,7 +102,7 @@ public class HmacSignatureFilter extends OncePerRequestFilter {
 
         byte[] hash = mac.doFinal(body);
         String hex = "sha256=" + HexFormat.of().formatHex(hash);
-        return hex.equals(signature);
+        return MessageDigest.isEqual(hex.getBytes(StandardCharsets.UTF_8), signature.getBytes(StandardCharsets.UTF_8));
 
     }
 
