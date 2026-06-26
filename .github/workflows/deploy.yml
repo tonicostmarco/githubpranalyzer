@@ -68,7 +68,8 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker stop githubpranalyzer || true
-            docker rm githubpranalyzer || true
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/githubpranalyzer:latest
-            cd ~/app && docker-compose pull && GROQ_API_KEY=${{ secrets.GROQ_API_KEY }} docker compose up -d
+            cd ~/app
+            printf 'GROQ_API_KEY=%s\n' '${{ secrets.GROQ_API_KEY }}' > .env
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
