@@ -2,6 +2,8 @@ services:
   mongodb:
     image: mongo:7
     container_name: mongodb
+    volumes:
+      - mongo_data:/data/db
     ports:
       - "27017:27017"
     environment:
@@ -85,3 +87,6 @@ services:
     depends_on:
       - githubpranalyzer
       - github-pr-insights
+
+volumes:
+  mongo_data:
