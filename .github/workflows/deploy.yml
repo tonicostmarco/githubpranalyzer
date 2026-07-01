@@ -72,4 +72,6 @@ jobs:
             printf 'GROQ_API_KEY=%s\n' '${{ secrets.GROQ_API_KEY }}' > .env
             docker compose pull
             docker compose up -d
-            docker image prune -f
+            docker image prune -af
+            docker container prune -f
+            docker builder prune -af
